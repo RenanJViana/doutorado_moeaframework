@@ -18,3 +18,4 @@ lib/junit-*.jar
 lib/hamcrest-core-*.jar
 auxiliary/checkstyle/checkstyle-*.jar
 *.state
+results/
