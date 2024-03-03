@@ -1,4 +1,4 @@
-package org.moeaframework.examples.ga.MaOKP.customizable;
+package org.moeaframework.examples.ga.MaOKP.standard;
 
 import java.io.File;
 import java.io.FileReader;
@@ -9,7 +9,6 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
@@ -17,7 +16,7 @@ import org.moeaframework.core.variable.EncodingUtils;
 import org.moeaframework.util.Vector;
 import org.moeaframework.util.io.CommentedLineReader;
 
-public class UnconstrainedCorrelatedCustomizableMaOKP implements Problem {
+public class UnconstrainedMaOKP implements Problem {
 
 	/**
 	 * The number of sacks.
@@ -56,9 +55,6 @@ public class UnconstrainedCorrelatedCustomizableMaOKP implements Problem {
 	// Instance name
 	protected String instanceName;
 
-	// Formulation
-	protected Formulation formulation;
-
 	/**
 	 * Constructs a multiobjective 0/1 knapsack problem instance loaded from the
 	 * specified file.
@@ -66,7 +62,7 @@ public class UnconstrainedCorrelatedCustomizableMaOKP implements Problem {
 	 * @param file the file containing the knapsack problem instance
 	 * @throws IOException if an I/O error occurred
 	 */
-	public UnconstrainedCorrelatedCustomizableMaOKP(File file) throws IOException {
+	public UnconstrainedMaOKP(File file) throws IOException {
 		this(new FileReader(file));
 	}
 
@@ -77,7 +73,7 @@ public class UnconstrainedCorrelatedCustomizableMaOKP implements Problem {
 	 * @param inputStream the input stream containing the knapsack problem instance
 	 * @throws IOException if an I/O error occurred
 	 */
-	public UnconstrainedCorrelatedCustomizableMaOKP(InputStream inputStream) throws IOException {
+	public UnconstrainedMaOKP(InputStream inputStream) throws IOException {
 		this(new InputStreamReader(inputStream));
 	}
 
@@ -88,7 +84,7 @@ public class UnconstrainedCorrelatedCustomizableMaOKP implements Problem {
 	 * @param reader the reader containing the knapsack problem instance
 	 * @throws IOException if an I/O error occurred
 	 */
-	public UnconstrainedCorrelatedCustomizableMaOKP(Reader reader) throws IOException {
+	public UnconstrainedMaOKP(Reader reader) throws IOException {
 		super();
 		load(reader);
 	}
@@ -185,20 +181,11 @@ public class UnconstrainedCorrelatedCustomizableMaOKP implements Problem {
 
 			// displayProblemTest();
 			// displayItems();
-			System.out.println("\nItemns");
-			items.forEach(System.out::println);
+			//System.out.println("\nItemns");
+			//items.forEach(System.out::println);
 
 		}
 
-	}
-
-	public void createFormulation(Combination combination, double correlation) {
-		this.formulation = new Formulation(this.getNumberOfObjectives(), combination.getFixedObjA(),
-				combination.getFixedObjB(), correlation, combination.getObjsAssignedToFixedObjs());
-	}
-
-	public void displayFormulation() {
-		this.formulation.display();
 	}
 
 	public void SetName(String name) {
@@ -225,66 +212,138 @@ public class UnconstrainedCorrelatedCustomizableMaOKP implements Problem {
 		return 0;
 	}
 
+	private double[] calculateSacksProfit(boolean[] itemSelection) {
+		double[] sackProfits = new double[this.nsacks];
+		for (int j = 0; j < this.nitems; j++) {
+			if (itemSelection[j]) {
+				for (int i = 0; i < this.nsacks; i++) {
+					sackProfits[i] += this.profit[i][j];
+				}
+			}
+		}
+		return sackProfits;
+	}
+
+	private double[] calculateSacksWeight(boolean[] itemSelection) {
+		double[] sackWeights = new double[this.nsacks];
+		for (int j = 0; j < this.nitems; j++) {
+			if (itemSelection[j]) {
+				for (int i = 0; i < this.nsacks; i++) {
+					sackWeights[i] += this.weight[i][j];
+				}
+			}
+		}
+		return sackWeights;
+	}
+
 	@Override
 	public void evaluate(Solution solution) {
-		// TODO Auto-generated method stub
 
+		// Infeasibility status
+		boolean infeasible = false;
+
+		// Get item selection
+		boolean[] itemSelection = EncodingUtils.getBinary(solution.getVariable(0));
+
+		// Calculate the weights of all knapsacks
+		double[] sacksWeight = calculateSacksWeight(itemSelection);
+
+		// Check if any weights exceed the capacities
+		for (int i = 0; i < this.nsacks; i++) {
+			if (sacksWeight[i] <= this.capacityComputed[i]) {
+				sacksWeight[i] = 0.0;
+			} else {
+				sacksWeight[i] = sacksWeight[i] - this.capacityComputed[i];
+				infeasible = true;
+			}
+		}
+
+		// If infeasible, it repairs the solution
+		if (infeasible) {
+			repairSolution(solution, itemSelection, sacksWeight);
+			sacksWeight = calculateSacksWeight(itemSelection);
+		}
+
+		// Calculate the profits and weights for the knapsacks
+		double[] sacksProfit = calculateSacksProfit(itemSelection);
+
+		// Double check if any weight exceeds capabilities
+		for (int i = 0; i < nsacks; i++) {
+			if (sacksWeight[i] > this.capacityComputed[i]) {				
+				System.out.println("ERROR :::: Infeasible Knapsack!!!!");
+				System.exit(-1);
+			}
+		}
+
+		// Negate the objectives since Knapsack is maximization
+		solution.setObjectives(Vector.negate(sacksProfit));
+
+	}
+
+	public void repairSolution(Solution solution, boolean[] itemSelection, double[] sacksWeight) {
+
+		int itemIterator = 0;
+
+		for (int i = 0; i < this.nsacks; i++) {
+
+			while (sacksWeight[i] > 0.0) {
+
+				int itemIndex = items.get(itemIterator).getIndex();
+
+				if (itemSelection[itemIndex]) {
+					itemSelection[itemIndex] = false;
+					removeItemInAllSacks(itemIndex, sacksWeight);
+				}
+
+				itemIterator++;
+			}
+
+			sacksWeight[i] = 0.0;
+		}
+
+		// Update solution encoding
+		EncodingUtils.setBinary(solution.getVariable(0), itemSelection);
+
+	}
+
+	public void removeItemInAllSacks(int itemIndex, double[] sacksWeight) {
+		for (int i = 0; i < this.nsacks; i++) {
+			sacksWeight[i] -= this.weight[i][itemIndex];
+		}
+	}
+
+	public void checkFeasibility(Solution solution) {
+
+		// Get item selection
+		boolean[] itemSelection = EncodingUtils.getBinary(solution.getVariable(0));
+
+		// Calculate the weights of the knapsacks
+		double[] sacksWeight = calculateSacksWeight(itemSelection);
+
+		// Check if any weights exceed the capacities
+		for (int i = 0; i < this.nsacks; i++) {
+			if (sacksWeight[i] > this.capacityComputed[i]) {
+				System.out.println("ERROR :::: Infeasible Knapsack!!!!");
+				System.exit(-1);
+			}
+		}
+
+	}
+
+	public void changeToMaximizationProblem(Solution solution) {
+		solution.setObjectives(Vector.negate(solution.getObjectives()));
 	}
 
 	@Override
 	public Solution newSolution() {
-		Solution solution = new Solution(1, nsacks, 0);
-		solution.setVariable(0, EncodingUtils.newBinary(nitems));
+		Solution solution = new Solution(1, this.nsacks, 0);
+		solution.setVariable(0, EncodingUtils.newBinary(this.nitems));
 		return solution;
 	}
 
 	@Override
 	public void close() {
-		// do nothing
-	}
-
-	private class Formulation {
-		private int numberOfObjectives;
-		private int fixedObjA;
-		private int fixedObjB;
-		private double correlation;
-		private Map<Integer, Integer> objsAssignedToFixedObjs;
-
-		public Formulation(int numberOfObjectives, int fixedObjA, int fixedObjB, double correlation,
-				Map<Integer, Integer> objsAssignedToFixedObjs) {
-
-			this.numberOfObjectives = numberOfObjectives;
-			this.fixedObjA = fixedObjA;
-			this.fixedObjB = fixedObjB;
-			this.correlation = correlation;
-			this.objsAssignedToFixedObjs = objsAssignedToFixedObjs;
-
-		}
-
-		public Map<Integer, Integer> getObjsAssignedToFixedObjs() {
-			return objsAssignedToFixedObjs;
-		}
-
-		public double getCorrelation() {
-			return correlation;
-		}
-
-		public void display() {
-			System.out.println("\nFORMULATION");
-			System.out.println("FIXED OBJECTIVES: " + (this.fixedObjA + 1) + " AND " + (this.fixedObjB + 1));
-
-			for (int i = 0; i < this.numberOfObjectives; i++) {
-				if (i == fixedObjA)
-					System.out.println("G" + (this.fixedObjA + 1) + "(x) = F" + (this.fixedObjA + 1) + "(x)");
-				else if (i == fixedObjB)
-					System.out.println("G" + (this.fixedObjB + 1) + "(x) = F" + (this.fixedObjB + 1) + "(x)");
-				else {
-					System.out.println(
-							"G" + (i + 1) + "(x) = " + this.correlation + " * F" + (objsAssignedToFixedObjs.get(i) + 1)
-									+ "(x) + (1.0 - " + this.correlation + ") * F" + (i + 1) + "(x)");
-				}
-			}
-		}
+		// TODO Auto-generated method stub
 
 	}
 
