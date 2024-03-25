@@ -28,8 +28,8 @@ public class UnconstrainedMaOKPExample {
 		String inputDirectoryPathName = currentDirectory + fileSeparator + "input" + fileSeparator;
 		System.out.println("Input path: " + inputDirectoryPathName);
 
-		String[] instances = new String[] { "knapsack_1_500_3", "knapsack_1_500_4", };
-		//		"knapsack_1_500_2", "knapsack_1_500_6", "knapsack_1_500_8", "knapsack_1_500_10" };
+		String[] instances = new String[] { "knapsack_1_500_2" };
+		//	, "knapsack_1_500_3", "knapsack_1_500_4", "knapsack_1_500_6", "knapsack_1_500_8", "knapsack_1_500_10" };
 		
 		String[] algorithms = new String[] { "NSGAII", "NSGAIII", "IBEA", "MOEAD" };
 		

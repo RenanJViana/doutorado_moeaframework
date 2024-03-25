@@ -11,10 +11,22 @@ public class CombinationGeneratorStrategy1 {
 
     public CombinationGeneratorStrategy1(int numberOfObjectives) {
         this.numberOfObjectives = numberOfObjectives;
-    }    
+    }
+    
+    private static Map<Integer, Integer> createMap(int key, int value) {
+		Map<Integer, Integer> map = new HashMap<>();
+		map.put(key, value);
+		return map;
+	}
 
     public List<Combination> generateCombinations() {
         List<Combination> combinations = new ArrayList<Combination>();
+        
+        if (this.numberOfObjectives < 4) {			
+			combinations.add(new Combination(0, 1, createMap(2, 0)));        
+	        combinations.add(new Combination(1, 2, createMap(0, 2)));
+			return combinations;
+		}
 
         for (int i = 0; i < this.numberOfObjectives; i += 2) {
             for (int j = 1; j < this.numberOfObjectives; j += 2) {

@@ -264,10 +264,10 @@ public class UnconstrainedMaOKP implements Problem {
 			sacksWeight = calculateSacksWeight(itemSelection);
 		}
 
-		// Calculate the profits and weights for the knapsacks
+		// Calculate the profits of all knapsacks
 		double[] sacksProfit = calculateSacksProfit(itemSelection);
 
-		// Double check if any weight exceeds capabilities
+		// Double check if any weight exceeds capacities
 		for (int i = 0; i < nsacks; i++) {
 			if (sacksWeight[i] > this.capacityComputed[i]) {				
 				System.out.println("ERROR :::: Infeasible Knapsack!!!!");

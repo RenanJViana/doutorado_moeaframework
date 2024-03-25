@@ -225,9 +225,175 @@ public class UnconstrainedCorrelatedCustomizableMaOKP implements Problem {
 		return 0;
 	}
 
+	private double[] calculateSacksProfit(boolean[] itemSelection) {
+		double[] sackProfits = new double[this.nsacks];
+		for (int j = 0; j < this.nitems; j++) {
+			if (itemSelection[j]) {
+				for (int i = 0; i < this.nsacks; i++) {
+					sackProfits[i] += this.profit[i][j];
+				}
+			}
+		}
+		return sackProfits;
+	}
+
+	private double[] calculateSacksWeight(boolean[] itemSelection) {
+		double[] sackWeights = new double[this.nsacks];
+		for (int j = 0; j < this.nitems; j++) {
+			if (itemSelection[j]) {
+				for (int i = 0; i < this.nsacks; i++) {
+					sackWeights[i] += this.weight[i][j];
+				}
+			}
+		}
+		return sackWeights;
+	}
+
 	@Override
 	public void evaluate(Solution solution) {
-		// TODO Auto-generated method stub
+
+		// Infeasibility status
+		boolean infeasible = false;
+
+		// Get item selection
+		boolean[] itemSelection = EncodingUtils.getBinary(solution.getVariable(0));
+
+		// Calculate the weights of all knapsacks
+		double[] sacksWeight = calculateSacksWeight(itemSelection);
+
+		// Check if any weights exceed the capacities
+		for (int i = 0; i < this.nsacks; i++) {
+			if (sacksWeight[i] <= this.capacityComputed[i]) {
+				sacksWeight[i] = 0.0;
+			} else {
+				sacksWeight[i] = sacksWeight[i] - this.capacityComputed[i];
+				infeasible = true;
+			}
+		}
+
+		// If infeasible, it repairs the solution
+		if (infeasible) {
+			repairSolution(solution, itemSelection, sacksWeight);
+			sacksWeight = calculateSacksWeight(itemSelection);
+		}
+
+		// Double check if any weight exceeds capacities
+		checkFeasibility(solution);
+
+		// Calculate the profits of all knapsacks
+		double[] sacksProfit = calculateSacksProfit(itemSelection);
+
+		// Correlation
+		double correlation_value = this.formulation.getCorrelation();
+
+		// If necessary, it calculates correlated objectives
+		if (correlation_value > 0.0) {
+
+			// Fixed objectives
+			int fixedObjA = this.formulation.getFixedObjA();
+			int fixedObjB = this.formulation.getFixedObjB();
+
+			// Assignment of objectives
+			Map<Integer, Integer> objsAssignedToFixedObjs = this.formulation.getObjsAssignedToFixedObjs();
+
+			// For each objective function
+			for (int i = 0; i < this.nsacks; i++) {
+
+				int correlatedObj = i;
+				if (correlatedObj == fixedObjA || correlatedObj == fixedObjB)
+					continue;
+
+				// Get associated base objective
+				int baseObj = objsAssignedToFixedObjs.get(i);
+
+				// Compute correlated objective
+				sacksProfit[i] = (correlation_value * sacksProfit[baseObj])
+						+ ((1.0 - correlation_value) * sacksProfit[correlatedObj]);
+			}
+		}
+
+		// Negate the objectives since Knapsack is maximization
+		solution.setObjectives(Vector.negate(sacksProfit));
+
+	}
+
+	public void repairSolution(Solution solution, boolean[] itemSelection, double[] sacksWeight) {
+
+		int itemIterator = 0;
+
+		for (int i = 0; i < this.nsacks; i++) {
+
+			while (sacksWeight[i] > 0.0) {
+
+				int itemIndex = items.get(itemIterator).getIndex();
+
+				if (itemSelection[itemIndex]) {
+					itemSelection[itemIndex] = false;
+					removeItemInAllSacks(itemIndex, sacksWeight);
+				}
+
+				itemIterator++;
+			}
+
+			sacksWeight[i] = 0.0;
+		}
+
+		// Update solution encoding
+		EncodingUtils.setBinary(solution.getVariable(0), itemSelection);
+
+	}
+
+	public void removeItemInAllSacks(int itemIndex, double[] sacksWeight) {
+		for (int i = 0; i < this.nsacks; i++) {
+			sacksWeight[i] -= this.weight[i][itemIndex];
+		}
+	}
+
+	public void checkFeasibility(Solution solution) {
+
+		// Get item selection
+		boolean[] itemSelection = EncodingUtils.getBinary(solution.getVariable(0));
+
+		// Calculate the weights of the knapsacks
+		double[] sacksWeight = calculateSacksWeight(itemSelection);
+
+		// Check if any weights exceed the capacities
+		for (int i = 0; i < this.nsacks; i++) {
+			if (sacksWeight[i] > this.capacityComputed[i]) {
+				System.out.println("ERROR :::: Infeasible Knapsack!!!!");
+				System.exit(-1);
+			}
+		}
+
+	}
+
+	public void changeToMaximizationProblem(Solution solution) {
+		solution.setObjectives(Vector.negate(solution.getObjectives()));
+	}
+
+	public void evaluateWithoutCorrelation(Solution solution) {
+
+		// Get item selection
+		boolean[] itemSelection = EncodingUtils.getBinary(solution.getVariable(0));
+
+		// Calculate the weights of all knapsacks
+		double[] sacksWeight = calculateSacksWeight(itemSelection);
+
+		// Calculate the profits of all knapsacks
+		double[] sacksProfit = calculateSacksProfit(itemSelection);
+
+		// Check if any weights exceed the capacities
+		for (int i = 0; i < this.nsacks; i++) {
+			if (sacksWeight[i] <= this.capacityComputed[i]) {
+				sacksWeight[i] = 0.0;
+			} else {
+				sacksWeight[i] = sacksWeight[i] - this.capacityComputed[i];
+				System.out.println("ERROR occured :::: Infeasible Knapsack!!!");
+				System.exit(-1);
+			}
+		}
+
+		solution.setObjectives(sacksProfit);
 
 	}
 
@@ -261,12 +427,20 @@ public class UnconstrainedCorrelatedCustomizableMaOKP implements Problem {
 
 		}
 
-		public Map<Integer, Integer> getObjsAssignedToFixedObjs() {
-			return objsAssignedToFixedObjs;
+		public int getFixedObjA() {
+			return fixedObjA;
+		}
+
+		public int getFixedObjB() {
+			return fixedObjB;
 		}
 
 		public double getCorrelation() {
 			return correlation;
+		}
+
+		public Map<Integer, Integer> getObjsAssignedToFixedObjs() {
+			return objsAssignedToFixedObjs;
 		}
 
 		public void display() {
