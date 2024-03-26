@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +23,7 @@ import org.moeaframework.util.TypedProperties;
 
 public class UnconstrainedCorrelatedCustomizableMaOKPInstrumenterExample {
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException {		
 
 		// Get the current working directory
 		String currentDirectory = System.getProperty("user.dir");
@@ -64,7 +65,7 @@ public class UnconstrainedCorrelatedCustomizableMaOKPInstrumenterExample {
 			CombinationGeneratorStrategy2 combinationGenerator = new CombinationGeneratorStrategy2(numberOfObjectives);
 			List<Combination> combinations = combinationGenerator.generateCombinations();
 
-			double[] correlationValues = new double[] { 0.2, 0.4, 0.6, 0.8 };
+			double[] correlationValues = new double[] { 0.0, 0.2, 0.4, 0.6, 0.8 };
 
 			for (double correlation : correlationValues) {
 				System.out.println("\nCorrelation value: " + correlation);
@@ -73,6 +74,7 @@ public class UnconstrainedCorrelatedCustomizableMaOKPInstrumenterExample {
 					kpProblem.createFormulation(combination, correlation);
 					// kpProblem.displayFormulation();
 					run(kpProblem, "NSGAIII", instanceName);
+					// System.out.println(kpProblem.getFormulationId());					
 				}
 
 			}
@@ -118,9 +120,13 @@ public class UnconstrainedCorrelatedCustomizableMaOKPInstrumenterExample {
 		// Obtém a data do dia corrente
 		LocalDate currentDate = LocalDate.now();
 
-		String dirName = "results/" + currentDate + "/instrumenter/" + "/" + getDirName(instanceName) + "/"
-				+ kpProblem.getNumberOfObjectives() + "/" + kpProblem.getNumberOfObjectives() + "_" + alg
-				+ "-MoeaFramework/";
+		String dirName = "results/" + currentDate + "/instrumenter/" + 
+						"/" + getDirName(instanceName) + 
+						"/" + kpProblem.getNumberOfObjectives() + 
+						"/" + kpProblem.getNumberOfObjectives() + "_" + alg + "-MoeaFramework" +
+						"/" + kpProblem.getFormulationId() +
+						"/" + kpProblem.getFormulationCorrelation() +
+						"/";
 
 		File directory = new File(dirName);
 		if (!directory.exists()) {
@@ -136,11 +142,17 @@ public class UnconstrainedCorrelatedCustomizableMaOKPInstrumenterExample {
 
 			PRNG.setSeed(seeds[exec]);
 
-			Instrumenter instrumenter = new Instrumenter().withFrequencyType(FrequencyType.EVALUATIONS)
-					.withFrequency(20000).attachApproximationSetCollector().attach(new PopulationCollector());
+			Instrumenter instrumenter = new Instrumenter()
+					.withFrequencyType(FrequencyType.EVALUATIONS)
+					.withFrequency(20000)
+					.attachApproximationSetCollector()
+					.attach(new PopulationCollector());
 
-			Executor executor = new Executor().withProblem(kpProblem).withAlgorithm(alg)
-					.withProperties(typedProperties.getProperties()).withMaxEvaluations(100000)
+			Executor executor = new Executor()
+					.withProblem(kpProblem)
+					.withAlgorithm(alg)
+					.withProperties(typedProperties.getProperties())
+					.withMaxEvaluations(100200)
 					.withInstrumenter(instrumenter);
 
 			executor.run();

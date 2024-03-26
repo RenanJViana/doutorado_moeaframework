@@ -201,6 +201,28 @@ public class UnconstrainedCorrelatedCustomizableMaOKP implements Problem {
 		this.formulation.display();
 	}
 
+	public String getFormulationId() {
+		if (this.formulation.getObjsAssignedToFixedObjs().isEmpty()) {
+			return "";
+		}
+
+		StringBuilder builder = new StringBuilder();
+		for (Map.Entry<Integer, Integer> entry : this.formulation.getObjsAssignedToFixedObjs().entrySet()) {
+			builder.append(entry.getValue() + 1).append("-").append(entry.getKey() + 1).append("_");
+		}
+
+		// Removendo o último caractere "_" da string
+		if (builder.length() > 0) {
+			builder.deleteCharAt(builder.length() - 1);
+		}		
+
+		return builder.toString();
+	}
+
+	public double getFormulationCorrelation() {
+		return this.formulation.getCorrelation();
+	}
+
 	public void SetName(String name) {
 		this.instanceName = name;
 	}
