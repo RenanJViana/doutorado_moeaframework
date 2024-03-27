@@ -23,7 +23,7 @@ import org.moeaframework.util.TypedProperties;
 
 public class UnconstrainedCorrelatedCustomizableMaOKPInstrumenterExample {
 
-	public static void main(String[] args) throws IOException {		
+	public static void main(String[] args) throws IOException {
 
 		// Get the current working directory
 		String currentDirectory = System.getProperty("user.dir");
@@ -40,44 +40,55 @@ public class UnconstrainedCorrelatedCustomizableMaOKPInstrumenterExample {
 		// "knapsack_1_500_2", "knapsack_1_500_3", "knapsack_1_500_6",
 		// "knapsack_1_500_8", "knapsack_1_500_10" };
 
-		for (String instanceName : instances) {
+		String[] algorithms = new String[] { "NSGAII", "IBEA", "MOEAD" };
+		// "NSGAIII", 
 
-			String intancePath = inputDirectoryPathName + instanceName + ".txt";
-			System.out.println("Instance path: " + intancePath + "\n");
+		for (String algorithm : algorithms) {
 
-			// Open the file containing the knapsack problem instance
-			File inputFile = new File(intancePath);
-			if (!inputFile.exists() || !inputFile.isFile()) {
-				System.out.println("File does not exist or is not valid.");
-				System.exit(-1);
-			}
+			System.out.println("\nAlgorithm: " + algorithm);
 
-			// Create a MaOKP instance
-			UnconstrainedCorrelatedCustomizableMaOKP kpProblem = new UnconstrainedCorrelatedCustomizableMaOKP(
-					inputFile);
-			kpProblem.SetName(instanceName);
+			for (String instanceName : instances) {
 
-			System.out.println("\nInstance name: " + kpProblem.getName());
-			int numberOfObjectives = kpProblem.getNumberOfObjectives();
-			System.out.println("Number of objectives: " + numberOfObjectives);
+				String intancePath = inputDirectoryPathName + instanceName + ".txt";
+				System.out.println("Instance path: " + intancePath + "\n");
 
-			// Get combinations based on some strategy
-			CombinationGeneratorStrategy2 combinationGenerator = new CombinationGeneratorStrategy2(numberOfObjectives);
-			List<Combination> combinations = combinationGenerator.generateCombinations();
-
-			double[] correlationValues = new double[] { 0.0, 0.2, 0.4, 0.6, 0.8 };
-
-			for (double correlation : correlationValues) {
-				System.out.println("\nCorrelation value: " + correlation);
-
-				for (Combination combination : combinations) {
-					kpProblem.createFormulation(combination, correlation);
-					// kpProblem.displayFormulation();
-					run(kpProblem, "NSGAIII", instanceName);
-					// System.out.println(kpProblem.getFormulationId());					
+				// Open the file containing the knapsack problem instance
+				File inputFile = new File(intancePath);
+				if (!inputFile.exists() || !inputFile.isFile()) {
+					System.out.println("File does not exist or is not valid.");
+					System.exit(-1);
 				}
 
+				// Create a MaOKP instance
+				UnconstrainedCorrelatedCustomizableMaOKP kpProblem = new UnconstrainedCorrelatedCustomizableMaOKP(
+						inputFile);
+				kpProblem.SetName(instanceName);
+
+				System.out.println("\nInstance name: " + kpProblem.getName());
+				int numberOfObjectives = kpProblem.getNumberOfObjectives();
+				System.out.println("Number of objectives: " + numberOfObjectives);
+
+				// Get combinations based on some strategy
+				CombinationGeneratorStrategy2 combinationGenerator = new CombinationGeneratorStrategy2(
+						numberOfObjectives);
+				List<Combination> combinations = combinationGenerator.generateCombinations();
+
+				double[] correlationValues = new double[] { 0.0, 0.2, 0.4, 0.6, 0.8 };
+
+				for (double correlation : correlationValues) {
+					
+					System.out.println("\nCorrelation value: " + correlation);
+
+					for (Combination combination : combinations) {
+						kpProblem.createFormulation(combination, correlation);
+						// kpProblem.displayFormulation();
+						System.out.println(kpProblem.getFormulationId());
+						run(kpProblem, algorithm, instanceName);						
+					}
+
+				}
 			}
+
 		}
 
 	}
