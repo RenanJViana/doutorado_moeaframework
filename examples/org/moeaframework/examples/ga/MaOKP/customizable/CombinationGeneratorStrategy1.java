@@ -22,7 +22,7 @@ public class CombinationGeneratorStrategy1 {
     public List<Combination> generateCombinations() {
         List<Combination> combinations = new ArrayList<Combination>();
         
-        if (this.numberOfObjectives < 4) {			
+        if (this.numberOfObjectives == 3) {			
 			combinations.add(new Combination(0, 1, createMap(2, 0)));        
 	        combinations.add(new Combination(1, 2, createMap(0, 2)));
 			return combinations;

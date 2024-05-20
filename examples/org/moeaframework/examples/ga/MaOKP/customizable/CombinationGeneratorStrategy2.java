@@ -48,9 +48,9 @@ public class CombinationGeneratorStrategy2 {
 		return map;
 	}
 
-	public List<Combination> generateCombinations() {
+	public List<Combination> generateCombinations() {		
 
-		if (this.numberOfObjectives < 4) {
+		if (this.numberOfObjectives == 3) {
 			List<Combination> combinations = new ArrayList<Combination>();
 			combinations.add(new Combination(0, 1, createMap(2, 0)));
 	        combinations.add(new Combination(0, 1, createMap(2, 1)));
