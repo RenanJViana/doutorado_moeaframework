@@ -185,8 +185,8 @@ public class UnconstrainedCorrelatedCustomizableMaOKP implements Problem {
 
 			// displayProblemTest();
 			// displayItems();
-			System.out.println("\nItemns");
-			items.forEach(System.out::println);
+			// System.out.println("\nItemns");
+			// items.forEach(System.out::println);
 
 		}
 
