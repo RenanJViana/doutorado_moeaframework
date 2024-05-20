@@ -36,12 +36,23 @@ public class UnconstrainedCorrelatedCustomizableMaOKPInstrumenterExample {
 		String inputDirectoryPathName = currentDirectory + fileSeparator + "input" + fileSeparator;
 		System.out.println("Input path: " + inputDirectoryPathName);
 
-		String[] instances = new String[] { "knapsack_1_500_4" };
-		// "knapsack_1_500_2", "knapsack_1_500_3", "knapsack_1_500_6",
-		// "knapsack_1_500_8", "knapsack_1_500_10" };
+		String[] instances = new String[] { 
+				// "knapsack_1_500_2",
+				// "knapsack_1_500_3", 
+				"knapsack_1_500_4",
+				// "knapsack_1_500_6",
+				// "knapsack_1_500_8", 
+				// "knapsack_1_500_10"				
+		};		 
 
-		String[] algorithms = new String[] { "NSGAII", "IBEA", "MOEAD" };
-		// "NSGAIII", 
+		String[] algorithms = new String[] { 
+				// "NSGAII", 
+				// "NSGAIII", 
+				// "IBEA", 
+				// "MOEAD",
+				// "DBEA",
+				"RVEA"
+				};		
 
 		for (String algorithm : algorithms) {
 
@@ -131,7 +142,7 @@ public class UnconstrainedCorrelatedCustomizableMaOKPInstrumenterExample {
 		// Obtém a data do dia corrente
 		LocalDate currentDate = LocalDate.now();
 
-		String dirName = "results/" + currentDate + "/instrumenter/" + 
+		String dirName = "results/" + currentDate + "/instrumenter/strategy2/" + 
 						"/" + getDirName(instanceName) + 
 						"/" + kpProblem.getNumberOfObjectives() + 
 						"/" + kpProblem.getNumberOfObjectives() + "_" + alg + "-MoeaFramework" +
@@ -163,7 +174,8 @@ public class UnconstrainedCorrelatedCustomizableMaOKPInstrumenterExample {
 					.withProblem(kpProblem)
 					.withAlgorithm(alg)
 					.withProperties(typedProperties.getProperties())
-					.withMaxEvaluations(100200)
+					.withMaxEvaluations(100650)
+					// .distributeOnAllCores()
 					.withInstrumenter(instrumenter);
 
 			executor.run();
