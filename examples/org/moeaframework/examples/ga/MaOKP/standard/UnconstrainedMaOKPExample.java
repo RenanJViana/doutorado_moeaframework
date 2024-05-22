@@ -42,8 +42,9 @@ public class UnconstrainedMaOKPExample {
 				// "NSGAIII", 
 				// "IBEA", 
 				// "MOEAD",
-				"DBEA",
-				"RVEA"
+				// "DBEA",
+				// "RVEA"
+				"AnD"
 				};	
 		
 		for (String algorithm : algorithms) {
@@ -135,7 +136,7 @@ public class UnconstrainedMaOKPExample {
 					.withProblem(kpProblem)
 					.withAlgorithm(alg)
 					.withProperties(typedProperties.getProperties())					
-					.withMaxEvaluations(3000000)
+					.withMaxEvaluations(100000)
 					.distributeOnAllCores();
 
 			System.out.println("Exec= " + exec + "   Seed= " + seeds[exec]);

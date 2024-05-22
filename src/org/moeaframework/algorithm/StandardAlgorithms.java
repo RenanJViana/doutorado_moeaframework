@@ -263,6 +263,8 @@ public class StandardAlgorithms extends AlgorithmProvider {
 			if (name.equalsIgnoreCase("MOEAD") ||
 					name.equalsIgnoreCase("MOEA/D")) {
 				return newMOEAD(typedProperties, problem);
+			} else if (name.equalsIgnoreCase("AnD")) {
+				return newAnD(typedProperties, problem);
 			} else if (name.equalsIgnoreCase("GDE3")) {
 				return newGDE3(typedProperties, problem);
 			} else if (name.equalsIgnoreCase("NSGAII") ||
@@ -351,6 +353,29 @@ public class StandardAlgorithms extends AlgorithmProvider {
 		}
 		
 		return true;
+	}
+	
+	/**
+	 * Returns a new AnD instance.
+	 * 
+	 * @param properties the properties for customizing the new {@code eMOEA}
+	 *        instance
+	 * @param problem the problem
+	 * @return a new And instance
+	 */
+	private Algorithm newAnD(TypedProperties properties, Problem problem) {
+		int populationSize = (int)properties.getDouble("populationSize", 100);
+
+		Initialization initialization = new RandomInitialization(problem,
+				populationSize);
+
+		Population population = new Population();
+		
+		Variation variation = OperatorFactory.getInstance().getVariation(null, 
+				properties, problem);
+		
+		return new AnD(problem, population, variation, initialization);
+		
 	}
 
 	/**

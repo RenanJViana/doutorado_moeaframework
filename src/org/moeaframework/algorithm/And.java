@@ -1,6 +1,8 @@
 package org.moeaframework.algorithm;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.moeaframework.core.Initialization;
 import org.moeaframework.core.PRNG;
@@ -9,7 +11,6 @@ import org.moeaframework.core.Problem;
 import org.moeaframework.core.Solution;
 import org.moeaframework.core.Variation;
 import org.moeaframework.util.Vector;
-import javafx.util.Pair;
 
 public class AnD extends AbstractEvolutionaryAlgorithm {
 
@@ -119,7 +120,7 @@ public class AnD extends AbstractEvolutionaryAlgorithm {
 		double[] objectives = solution.getObjectives();
 
 		for (int i = 0; i < problem.getNumberOfObjectives(); i++) {
-			objectives[i] = ((solution.getObjective(i) - this.minObjBounds[i]) 
+			objectives[i] = ((solution.getObjective(i) - this.minObjBounds[i])
 					/ (this.maxOBjBounds[i] - this.minObjBounds[i]));
 		}
 
@@ -198,15 +199,15 @@ public class AnD extends AbstractEvolutionaryAlgorithm {
 	}
 
 	/**
-	 * Calculate the Euclidian distances between the other shifted normalized objective vectors and the
-	 * individual normalized objective vector
+	 * Calculate the Euclidian distances between the other shifted normalized
+	 * objective vectors and the individual normalized objective vector
 	 * 
 	 * @param index the index of the individual
 	 * @return euclidean distances
 	 */
-	protected double[] computeEuclideanDistance(int index) {
+	protected List<Double> computeEuclideanDistance(int index) {
 		int populationSize = population.size();
-		double[] distances = new double[populationSize - 1];
+		List<Double> distances = new ArrayList<Double>();
 
 		double[] normalizedObjectivesRef = (double[]) population.get(index).getAttribute(NORMALIZED_OBJECTIVES);
 
@@ -215,29 +216,34 @@ public class AnD extends AbstractEvolutionaryAlgorithm {
 				continue;
 
 			double[] shiftNormalizedObjectives = (double[]) population.get(i).getAttribute(SHIFT_NORMALIZED_OBJECTIVES);
-			distances[i] = euclideanDistance(problem, shiftNormalizedObjectives, normalizedObjectivesRef);
+			distances.add(euclideanDistance(problem, shiftNormalizedObjectives, normalizedObjectivesRef));
 		}
 
 		return distances;
 	}
 
 	/**
-	 * Compute shift based density estimation of the candidates to be removed from population
+	 * Compute shift based density estimation of the candidates to be removed from
+	 * population
 	 * 
-	 * @param candidatesToBeRemoved the index of the candidates to be removed from population
+	 * @param candidatesToBeRemoved the index of the candidates to be removed from
+	 *                              population
 	 * @return shift based density estimations
 	 */
 	protected double[] computeShiftBasedDensityEstimation(int[] candidatesToBeRemoved) {
 		int populationSize = population.size();
 		int k = (int) Math.pow(populationSize, 1.0 / 2.0);
-		double[] density_estimations = new double[candidatesToBeRemoved.length];
+		
+		int numberOfCandidates = candidatesToBeRemoved.length;
+		double[] density_estimations = new double[numberOfCandidates];		
 
-		for (int i : candidatesToBeRemoved) {
-			shiftIndividuals(i);
-			double[] distances = computeEuclideanDistance(i);
-			Arrays.sort(distances);
+		for (int i = 0; i < numberOfCandidates; i++) {
+			int index = candidatesToBeRemoved[i];			
+			shiftIndividuals(index);
+			List<Double> distances = computeEuclideanDistance(index);
+			Collections.sort(distances);			
 
-			density_estimations[i] = 1.0 / (distances[k] + 2.0);
+			density_estimations[i] = 1.0 / (distances.get(k) + 2.0);
 		}
 
 		return density_estimations;
@@ -257,6 +263,7 @@ public class AnD extends AbstractEvolutionaryAlgorithm {
 
 	@Override
 	protected void iterate() {
+		System.out.println(getNumberOfEvaluations());
 		int populationSize = population.size();
 
 		Population offspring = new Population();
