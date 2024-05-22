@@ -119,7 +119,7 @@ public class And extends AbstractEvolutionaryAlgorithm {
 		double[] objectives = solution.getObjectives();
 
 		for (int i = 0; i < problem.getNumberOfObjectives(); i++) {
-			objectives[i] -= ((solution.getObjective(i) - this.minObjBounds[i])
+			objectives[i] = ((solution.getObjective(i) - this.minObjBounds[i]) 
 					/ (this.maxOBjBounds[i] - this.minObjBounds[i]));
 		}
 
