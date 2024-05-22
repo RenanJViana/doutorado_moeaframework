@@ -11,7 +11,7 @@ import org.moeaframework.core.Variation;
 import org.moeaframework.util.Vector;
 import javafx.util.Pair;
 
-public class And extends AbstractEvolutionaryAlgorithm {
+public class AnD extends AbstractEvolutionaryAlgorithm {
 
 	/**
 	 * The name of the attribute for storing the normalized objectives.
@@ -38,7 +38,7 @@ public class And extends AbstractEvolutionaryAlgorithm {
 	 */
 	private double[] maxOBjBounds;
 
-	public And(Problem problem, Population population, Variation variation, Initialization initialization) {
+	public AnD(Problem problem, Population population, Variation variation, Initialization initialization) {
 		super(problem, population, null, initialization);
 		this.variation = variation;
 	}
@@ -52,7 +52,7 @@ public class And extends AbstractEvolutionaryAlgorithm {
 
 	/**
 	 * Returns the cosine between two objective vectors. This method assumes the two
-	 * objective vectors are normalized. does not need to be normalized.
+	 * objective vectors are normalized.
 	 * 
 	 * @param point the point
 	 * @param point the point
@@ -168,6 +168,11 @@ public class And extends AbstractEvolutionaryAlgorithm {
 		return new int[] { solutionIndex1, solutionIndex2 };
 	}
 
+	/**
+	 * Shift the objective values for all population.
+	 * 
+	 * @param index the index of the individual
+	 */
 	protected void shiftIndividuals(int index) {
 		int populationSize = population.size();
 
@@ -192,6 +197,13 @@ public class And extends AbstractEvolutionaryAlgorithm {
 		}
 	}
 
+	/**
+	 * Calculate the Euclidian distances between the other shifted normalized objective vectors and the
+	 * individual normalized objective vector
+	 * 
+	 * @param index the index of the individual
+	 * @return euclidean distances
+	 */
 	protected double[] computeEuclideanDistance(int index) {
 		int populationSize = population.size();
 		double[] distances = new double[populationSize - 1];
@@ -209,6 +221,12 @@ public class And extends AbstractEvolutionaryAlgorithm {
 		return distances;
 	}
 
+	/**
+	 * Compute shift based density estimation of the candidates to be removed from population
+	 * 
+	 * @param candidatesToBeRemoved the index of the candidates to be removed from population
+	 * @return shift based density estimations
+	 */
 	protected double[] computeShiftBasedDensityEstimation(int[] candidatesToBeRemoved) {
 		int populationSize = population.size();
 		int k = (int) Math.pow(populationSize, 1.0 / 2.0);
